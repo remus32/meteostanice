@@ -1,7 +1,26 @@
-include <params.scad>;
+mrv_r_loziska_vnitrni = 7/2;
+mrv_r_loziska_vnejsi = 19/2;
+mrv_h_loziska = 10;
+mrv_magnet = 4;
+
+mrv_r_misky_vnitrni = 38;
+mrv_r_misky_vnejsi = 3 + mrv_r_misky_vnitrni;
+mrv_zplosteni_misky = 1.1;
+
+mrv_tloustka_drzaku = 2.5;
+mrv_vyska_drzaku = 12;
+mrv_tloustka_zamku_vnitni = 2;
+mrv_tloustka_zamku_vnejsi = 15;
+
+mrv_r_stredu = 20;
+mrv_h_stredu = 10;
+mrv_d_ruky = 120;
+mrv_h_ruky = 5;
+mrv_n_rukou = 3;
+mrv_zamek_width = 8;
 
 module mrv_miska() {
-  difference() {
+  scale([1, 1 / mrv_zplosteni_misky, 1]) difference() {
     sphere(mrv_r_misky_vnejsi);
     sphere(mrv_r_misky_vnitrni);
     translate([0, -2*mrv_r_misky_vnejsi, 0])
@@ -9,28 +28,49 @@ module mrv_miska() {
   }
 }
 
-mrv_h_ruky = 2;
-mrv_h_ruky_2 = 10;
+module mrv_ruka_zamek() {
+  x0 = 0;
+  x1 = 15;
+  x2 = 18;
+  x3 = 21;
 
+  y0 = 0;
+  y1 = mrv_tloustka_zamku_vnejsi / 2 - mrv_tloustka_zamku_vnitni;
+  y2 = mrv_tloustka_zamku_vnejsi / 2 + mrv_tloustka_zamku_vnitni;
+  y3 = mrv_tloustka_zamku_vnejsi;
+
+  linear_extrude(mrv_vyska_drzaku)
+    polygon([
+      [x0, y0],
+      [x1, y3],
+
+      [x1, y2],
+      [x2, y2],
+
+      [x2, y3],
+      [x3, y3],
+      [x3, y0],
+      [x2, y0],
+
+      [x2, y1],
+      [x1, y1],
+
+      [x1, y0]
+    ]);
+}
 module mrv_ruka_drzadlo() {
-  rotate([90, 0, 0]) translate([0, mrv_zamek_width, 0])
-    linear_extrude(mrv_h_ruky)
-      polygon(points=[
-          [0, 0],
-          [0, mrv_zamek_width],
-          [mrv_d_ruky, 3],
-          [mrv_d_ruky, 0]
-      ]);
+  cube([mrv_d_ruky, mrv_tloustka_drzaku, mrv_vyska_drzaku]);
+  translate([mrv_d_ruky - 15, 0, 0])
+    mrv_ruka_zamek();
 }
 
 module mrv_ruka() {
-  /* translate([0, -mrv_d_ruky, 0]) */
+  translate([mrv_d_ruky, -mrv_tloustka_zamku_vnejsi/2, 0]) rotate([0, 180, 0])
     union() {
-      /* translate([mrv_h_ruky / 2, 0, 0]) */
-        mrv_miska();
+      mrv_miska();
 
       difference() {
-        translate([0, 0, 0])
+        translate([0, 0, -mrv_vyska_drzaku/2])
           mrv_ruka_drzadlo();
         sphere(mrv_r_misky_vnitrni);
       }
@@ -38,53 +78,38 @@ module mrv_ruka() {
 }
 
 module mrv_hlava() {
+  difference() {
+    cylinder(r=20, h=15, center=true);
+    for (i = [0:(mrv_n_rukou - 1)]) {
+      scale([1.02, 1.02, 1.1])
+        rotate([0, 0, i * 360 / mrv_n_rukou])
+          translate([17.6, 0, 1])
+            mrv_ruka();
+    }
+  }
+}
+
+translate([0, 0, 15/2]) {
+  mrv_hlava();
   for (i = [0:(mrv_n_rukou - 1)]) {
-    rotate([0, 0, i * 360 / mrv_n_rukou]) mrv_ruka();
-  }
-  cylinder(r=mrv_r_stredu, h=mrv_h_stredu, center=true);
-}
-
-module mrv_noha() {
-  /* cylinder(r=mrv_r_nohy, h=mrv_h_nohy_vevnitr + mrv_h_nohy_venku + mrv_h_stredu); */
-  /* cylinder(r=mrv_r_zarazedla, h=mrv_h_zarazedla); */
-  cylinder(h=mrv_h_nohy_venku_2, r1=mrv_r_loziska_vnitrni, r2=mrv_r_nohy_venku);
-  translate([0, 0, mrv_h_nohy_venku_2 - 0.0001])
-    cylinder(h=mrv_h_nohy_venku_1, r=mrv_r_nohy_venku);
-}
-
-module mrv() {
-  translate([0, 0, mrv_h_nohy_venku_2 + mrv_h_nohy_venku_1 + mrv_h_stredu / 2])
-    mrv_hlava();
-  mrv_noha();
-}
-
-/* module rotor() {
-  translate([0, 0, h_rotor]) hlava();
-  translate([0, 0, h_rotor - h_rotor_3]) cylinder(r=r_lozisko_okraj, h=h_lozisko_okraj);
-  difference() {
-    cylinder(r=r_rotor, h=h_rotor);
-    translate([0, 0, h_rotor_1 + (magnet / 2)]) cube([magnet, 1000, magnet], center=true);
+    // scale(1.04)
+      rotate([0, 0, i * 360 / mrv_n_rukou])
+        translate([17.6, 0, 0])
+          mrv_ruka();
   }
 }
 
-module stator_spodek() {
-  difference() {
-    cylinder(h=h_stator, r=r_stator_vnejsi);
-    translate([0, 0, h_stator_podlaha]) cylinder(h=h_stator, r=r_stator_vnitrni);
-  }
-}
+module mrv_tyc() {
+  delka_kuzelu = 6;
+  delka_tyce = 30;
 
-module stator_horejsek() {
-  difference() {
-    cylinder(h=h_stator, r=r_stator_vnejsi);
-    translate([0, 0, h_stator_podlaha]) cylinder(h=h_stator, r=r_stator_vnitrni);
-  }
+  translate([0, 0, -delka_kuzelu])
+    cylinder(r1=mrv_r_loziska_vnitrni, r2=20, h=delka_kuzelu);
+  translate([0, 0, -(delka_kuzelu+delka_tyce)])
+    difference() {
+      cylinder(r=mrv_r_loziska_vnitrni, h=delka_tyce);
+      translate([0, 0, 5])
+        cube([1000, mrv_magnet, mrv_magnet], center=true);
+    }
 }
-
-module anemometr() {
-  translate([0, 0, h_rotor_offset]) rotor();
-  stator_horejsek();
-  stator_spodek();
-}
-
-anemometr(); */
+mrv_tyc();
