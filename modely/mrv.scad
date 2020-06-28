@@ -102,7 +102,7 @@ module mrv_tyc() {
   translate([0, 0, -(delka_kuzelu+delka_tyce)])
     difference() {
       cylinder(r=mrv_r_loziska_vnitrni, h=delka_tyce);
-      translate([0, 0, 5])
+      translate([0, 0, 6])
         cube([1000, mrv_magnet, mrv_magnet], center=true);
     }
 }
@@ -121,24 +121,66 @@ module mrv() {
 
 mrv();
 
+mrv_hall_sirka=3;
+module drzak_sensoru(h) {
+  cube([10, 5, h], center=true);
+  translate([0, -1, -1])
+    difference() {
+      cube([mrv_hall_sirka+1.5, 6, h-2], center=true);
+      translate([0, 0, -1])
+        cube([mrv_hall_sirka, 7, h-2], center=true);
+    }
+}
+module drzaky_sensoru_octagon(h) {
+  for (i=[0:7]) {
+    rotate([0, 0, 360/8*i])
+      translate([8.3, 0, h/2])
+        rotate([0, 0, -90])
+          drzak_sensoru(h);
+  }
+
+}
+
+/* function delka_strany_v_octagonu(r) =
+  sin(360/8) * (r / sin(1080/16));
+
+module drzaky_sensoru_octagon(h) {
+  difference() {
+    cylinder(h=h, r=13);
+    translate([0, 0, -0.1])
+      linear_extrude(h+0.2)
+        octagon(10);
+  }
+  strana = delka_strany_v_octagonu(10);
+  for (i=[0:7]) {
+    translate([7, 0, 0])
+    rotate([0, 0, -45])
+    polygon(points=[
+      [0,0],
+      [strana,0],
+      [0,strana]
+    ]);
+  }
+
+} */
+/* drzaky_sensoru_octagon(20); */
+
 module prostredek() {
   p_stena = 8;
   p_r = mrv_r_loziska_vnejsi + p_stena;
-  p_h = 50;
+  p_h = 40;
   h_spodku = p_h - mrv_h_loziska - p_stena;
   difference() {
     cylinder(r=p_r, h=p_h);
     translate([0, 0, p_h + 0.01 - mrv_h_loziska])
       cylinder(r=mrv_r_loziska_vnejsi + 0.1, h=mrv_h_loziska);
-    translate([0, 0, -0.01])
-      linear_extrude(h_spodku)
-        octagon(mrv_r_loziska_vnejsi);
-    //   cylinder(r=mrv_r_loziska_vnejsi + 0.1, h=h_spodku);
+    translate([0,0,-0.01])
+      cylinder(r=mrv_r_loziska_vnejsi + 0.1, h=h_spodku);
     cylinder(r=mrv_r_loziska_vnitrni+1, h=50);
-
   }
-
+  /* translate([0, 0, -p_h]) */
+    drzaky_sensoru_octagon(h_spodku);
 }
 
-translate([0, 0, -12]) bearing(model=607);
-translate([0, 0, -56]) prostredek();
+/* translate([0, 0, -12]) bearing(model=607); */
+translate([0, 0, -46]) prostredek();
