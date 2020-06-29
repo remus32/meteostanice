@@ -118,8 +118,20 @@ module mrv() {
   }
   mrv_tyc();
 }
+module mrv_rozlozeny() {
+  rotate([180, 0, 0]) {
+    translate([0, 0, -15])
+      mrv_tyc();
+    translate([0, 0, -15/2])
+      mrv_hlava();
+  }
 
-mrv();
+  for (i=[0:2]) {
+    translate([0, 30 + i * 100, 7.5])
+      rotate([90, 0, 0])
+        mrv_ruka();
+  }
+}
 
 mrv_hall_sirka=3;
 module drzak_sensoru(h) {
@@ -182,5 +194,18 @@ module prostredek() {
     drzaky_sensoru_octagon(h_spodku);
 }
 
-/* translate([0, 0, -12]) bearing(model=607); */
-translate([0, 0, -46]) prostredek();
+/* B_SLOZENY=true; */
+
+if (B_LOZISKO) {
+  translate([0, 0, -12]) bearing(model=607);
+}
+
+if (B_SLOZENY) {
+  mrv();
+  translate([0, 0, -46]) prostredek();
+} else {
+  translate([35, 35, 0])
+    mrv_rozlozeny();
+  translate([80, 110, 0])
+    prostredek();
+}
