@@ -10,10 +10,11 @@
 #include "esp_sleep.h"
 #include "esp_wifi.h"
 
+#include "driver/gpio.h"
+
 static const char *LTAG = "meteostanice main";
 
-void app_main(void) {
-  /* Print chip information */
+static void print_chip_info() {
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
   printf("This is %s chip with %d CPU cores, WiFi%s%s, ",
@@ -29,6 +30,13 @@ void app_main(void) {
 
   printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
 
+}
+
+void app_main(void) {
+  print_chip_info();
+  ESP_ERROR_CHECK(ws_led_init());
+  ws_led_set(200);
+
   ws_wifi_init();
   ESP_ERROR_CHECK(ws_bme280_init());
 
@@ -40,11 +48,15 @@ void app_main(void) {
   measurement = (ws_measurement_t){
     .bme = bme280_measurement
   };
+
+  ws_led_set(50);
   ESP_ERROR_CHECK(ws_http_send(&measurement));
   // RTC_DATA_ATTR;
 
+  ws_led_set(-1);
   esp_wifi_stop();
   esp_deep_sleep(1000 * 1000 * 5);
+
 
   // for (int i = 10; i >= 0; i--) {
   //     printf("Restarting in %d seconds...\n", i);
