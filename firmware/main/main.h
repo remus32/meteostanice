@@ -6,10 +6,10 @@
 
 #include "lwip/dns.h"
 
-// #define WS_WIFI_SSID "stoka"
-// #define WS_WIFI_PASS "net130755"
-#define WS_WIFI_SSID "ffff"
-#define WS_WIFI_PASS "prasatko"
+#define WS_WIFI_SSID "stoka"
+#define WS_WIFI_PASS "net130755"
+// #define WS_WIFI_SSID "ffff"
+// #define WS_WIFI_PASS "prasatko"
 #define WS_WIFI_MAX_RETRIES 10
 
 #define WS_DNS_WAIT_TICKS 10000 / portTICK_RATE_MS
@@ -32,9 +32,6 @@ typedef struct {
 typedef struct {
   ws_bme280_measurement_t bme;
 } ws_measurement_t;
-
-// dns.c
-esp_err_t ws_dns_query(const char *hostname, ip_addr_t *addr);
 
 void ws_wifi_init();
 esp_err_t ws_bme280_init();
