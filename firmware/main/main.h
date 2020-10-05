@@ -15,11 +15,15 @@
 #define WS_DNS_WAIT_TICKS 10000 / portTICK_RATE_MS
 
 #define WS_HTTP_SERVER_NAME "ws.remus32.cz"
-#define WS_HTTP_PATH "/publish"
+#define WS_HTTP_PATH "/publish.php"
 #define WS_HTTP_KEY "supertajneheslo"
 
 // Ktery pin je stavova ledka?
 #define WS_LED_GPIO 2
+
+#define WS_MEASUREMENT_STORE_SIZE 16
+#define WS_MEASUREMENT_WAKEUP_INTERVAL 2
+#define WS_MEASUREMENT_SEND_CYCLES 5
 
 // #define WS_MEASUREMENT_BME_CYCLES 5
 
@@ -30,14 +34,17 @@ typedef struct {
 } ws_bme280_measurement_t;
 
 typedef struct {
-  ws_bme280_measurement_t bme;
+  // Pole s bme merenimi
+  ws_bme280_measurement_t *bme;
+  // Maska - ktere body z *bme mame poslat
+  uint32_t bme_mask;
 } ws_measurement_t;
 
 void ws_wifi_init();
 esp_err_t ws_bme280_init();
 int32_t ws_bme280_measure(ws_bme280_measurement_t *measurement);
 
-esp_err_t ws_http_send(ws_measurement_t *measurement);
+esp_err_t ws_http_send(const ws_measurement_t *measurement);
 
 esp_err_t ws_led_init();
 void ws_led_set(int status);

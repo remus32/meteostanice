@@ -101,7 +101,7 @@ static esp_err_t sendchunkf_impl(int sfd, int chars_printed, void* buffer, size_
 #define sendchunk(sfd, str, len) send_helper_check_errror(sendchunkf_impl(sfd, len, str, len + 1))
 #define sendchunkf(sfd, ...) send_helper_check_errror(sendchunkf_impl(sfd, snprintf(tx_buffer, sizeof(tx_buffer), __VA_ARGS__), tx_buffer, sizeof(tx_buffer)))
 
-esp_err_t ws_http_send(ws_measurement_t *measurement) {
+esp_err_t ws_http_send(const ws_measurement_t *measurement) {
   esp_err_t err = ESP_OK;
   int sfd = ws_http_create_socket(WS_HTTP_SERVER_NAME);
   if (sfd < 0) {
@@ -112,18 +112,32 @@ esp_err_t ws_http_send(ws_measurement_t *measurement) {
   sendf(sfd, "Host: %s\r\n", WS_HTTP_SERVER_NAME);
   sendf(sfd, "Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n");
 
-  sendchunk(sfd, "{", 1);
+  sendchunkf(sfd, "{\"bme\":[");
 
-  sendchunkf(
-    sfd,
-    "\"temp\":%i,\"pres\":%u,\"hum\":%u",
-    measurement->bme.temp,
-    measurement->bme.pres,
-    measurement->bme.hum
-  );
+  // Před prvním objektem nebudeme posílat čárku
+  int send_comma = 0;
+  for (int i = 0;i < 32;i++) {
+    // Je v masce zaplý itý bit?
+    if (measurement->bme_mask & (1 << i)) {
+      // Pošleme ité měření
+      const ws_bme280_measurement_t *pt = measurement->bme + i;
 
-  sendchunk(sfd, "}", 1);
+      sendchunkf(
+        sfd,
+        "%s{\"temp\":%i,\"pres\":%u,\"hum\":%u}",
+        send_comma++ ? "," : "",
+        pt->temp,
+        pt->pres,
+        pt->hum
+      );
+    }
+  }
+
+  sendchunkf(sfd, "]}");
   sendchunk(sfd, "", 0);
+
+  char c;
+  recv(sfd, &c, 1, 0);
 
 on_tx_errror:
   close(sfd);

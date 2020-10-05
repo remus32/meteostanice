@@ -14,6 +14,13 @@
 
 static const char *LTAG = "meteostanice main";
 
+RTC_SLOW_ATTR ws_bme280_measurement_t ws_bme280_measurements[WS_MEASUREMENT_STORE_SIZE];
+
+// Kolik máme v bufferu obsazených pozic?
+// RTC_SLOW_ATTR uint8_t ws_bme280_measurement_buffer = 0;
+// V jaké fázi jsme?
+RTC_SLOW_ATTR uint8_t ws_bme280_measurement_idx = 0;
+
 static void print_chip_info() {
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
@@ -33,6 +40,8 @@ static void print_chip_info() {
 }
 
 void app_main(void) {
+  ws_bme280_measurement_idx++;
+
   print_chip_info();
   ESP_ERROR_CHECK(ws_led_init());
   ws_led_set(200);
@@ -40,26 +49,33 @@ void app_main(void) {
   ws_wifi_init();
   ESP_ERROR_CHECK(ws_bme280_init());
 
-  ws_ulp_start();
+  // ws_ulp_start();
 
-  ws_bme280_measurement_t bme280_measurement;
   ws_measurement_t measurement;
 
-  ESP_ERROR_CHECK(ws_bme280_measure(&bme280_measurement));
-  ESP_LOGI(LTAG, "temp = %i.%i°C, pres=%uPa, hum = %u%%rH", bme280_measurement.temp / 100, bme280_measurement.temp % 100, bme280_measurement.pres / 256, bme280_measurement.hum / 1024);
-  measurement = (ws_measurement_t){
-    .bme = bme280_measurement
-  };
+  ESP_ERROR_CHECK(ws_bme280_measure(&ws_bme280_measurements[ws_bme280_measurement_idx - 1]));
+  // ESP_LOGI(LTAG, "temp = %i.%i°C, pres=%uPa, hum = %u%%rH", bme280_measurement.temp / 100, bme280_measurement.temp % 100, bme280_measurement.pres / 256, bme280_measurement.hum / 1024);
 
-  ws_led_set(50);
-  // ESP_ERROR_CHECK(ws_http_send(&measurement));
-  // RTC_DATA_ATTR;
+  if (ws_bme280_measurement_idx >= WS_MEASUREMENT_SEND_CYCLES) {
+    ws_bme280_measurement_idx = 0;
+
+
+    measurement = (ws_measurement_t){
+      .bme = ws_bme280_measurements,
+      .bme_mask = 0b11111
+    };
+
+    ws_led_set(50);
+    ESP_ERROR_CHECK(ws_http_send(&measurement));
+
+  }
+
 
   ws_led_set(-1);
   esp_wifi_stop();
 
   ESP_LOGI(LTAG, "Entering deep sleep...");
-  esp_deep_sleep(1000 * 1000 * 10);
+  esp_deep_sleep(1000 * 1000 * WS_MEASUREMENT_WAKEUP_INTERVAL);
 
 
   // for (int i = 10; i >= 0; i--) {

@@ -449,8 +449,5 @@ int32_t ws_bme280_measure(ws_bme280_measurement_t *measurement) {
   measurement->pres = ws_bme280_compensate_pres(raw.pres, t_fine, &ws_bme280_compensation);
   ESP_LOGD(LTAG, "measurement temp=%u,pres=%u,hum=%u", measurement->temp, measurement->pres, measurement->hum);
 
-  //TODO: compensation
-  // return temp;
-
   return ESP_OK;
 }
