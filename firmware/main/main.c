@@ -40,6 +40,8 @@ void app_main(void) {
   ws_wifi_init();
   ESP_ERROR_CHECK(ws_bme280_init());
 
+  ws_ulp_start();
+
   ws_bme280_measurement_t bme280_measurement;
   ws_measurement_t measurement;
 
@@ -50,12 +52,14 @@ void app_main(void) {
   };
 
   ws_led_set(50);
-  ESP_ERROR_CHECK(ws_http_send(&measurement));
+  // ESP_ERROR_CHECK(ws_http_send(&measurement));
   // RTC_DATA_ATTR;
 
   ws_led_set(-1);
   esp_wifi_stop();
-  esp_deep_sleep(1000 * 1000 * 5);
+
+  ESP_LOGI(LTAG, "Entering deep sleep...");
+  esp_deep_sleep(1000 * 1000 * 10);
 
 
   // for (int i = 10; i >= 0; i--) {

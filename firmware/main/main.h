@@ -6,8 +6,10 @@
 
 #include "lwip/dns.h"
 
-#define WS_WIFI_SSID "stoka"
-#define WS_WIFI_PASS "net130755"
+// #define WS_WIFI_SSID "stoka"
+// #define WS_WIFI_PASS "net130755"
+#define WS_WIFI_SSID "ffff"
+#define WS_WIFI_PASS "prasatko"
 #define WS_WIFI_MAX_RETRIES 10
 
 #define WS_DNS_WAIT_TICKS 10000 / portTICK_RATE_MS
@@ -42,3 +44,5 @@ esp_err_t ws_http_send(ws_measurement_t *measurement);
 
 esp_err_t ws_led_init();
 void ws_led_set(int status);
+
+void ws_ulp_start();
