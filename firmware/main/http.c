@@ -108,7 +108,7 @@ esp_err_t ws_http_send(ws_measurement_t *measurement) {
     return ESP_FAIL;
   }
 
-  sendf(sfd, "POST %s HTTP/1.1\r\n", WS_HTTP_PATH);
+  sendf(sfd, "POST %s?key=%s HTTP/1.1\r\n", WS_HTTP_PATH, WS_HTTP_KEY);
   sendf(sfd, "Host: %s\r\n", WS_HTTP_SERVER_NAME);
   sendf(sfd, "Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n");
 
