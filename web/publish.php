@@ -17,12 +17,22 @@ function avgField($arr, $fieldName) {
 if ($_GET['key'] !== $_ENV['API_KEY']) die();
 
 // https://stackoverflow.com/questions/7047870/issue-reading-http-request-body-from-a-json-post-in-php
-$inputJSON = file_get_contents('php://input');
-$input = json_decode($inputJSON, true);
+$input_json = file_get_contents('php://input');
+$input = json_decode($input_json, true);
 
-$stmt = $dbh->prepare('INSERT INTO measurements("temp", "hum", "pres") VALUES(?, ?, ?)');
+$stmt = $dbh->prepare('INSERT INTO measurements("time", "temp", "hum", "pres") VALUES(?, ?, ?, ?)');
 $stmt->execute(array(
-  avgField($input['bme'], 'temp'),
-  avgField($input['bme'], 'hum'),
-  avgField($input['bme'], 'pres')
+  unix2wstime(time()) - 1, // Měření je za předchozí interval
+
+  // Převod z fixed-point integerů do floatů
+  avgField($input['bme'], 'temp') / 100,
+  avgField($input['bme'], 'hum') / 1024,
+  avgField($input['bme'], 'pres') / 256
 ));
+
+// Kolik sekund už uběhlo od začátku aktuálního intervalu
+$elapsed_period_time = time() - wstime2unix(unix2wstime(time()));
+// Za kolik sekund začne další interval
+$sync_time = ceil(WS_TIME_PERIOD - $elapsed_period_time);
+
+echo("$sync_time\n");
