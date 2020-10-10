@@ -40,11 +40,15 @@ typedef struct {
   uint32_t bme_mask;
 } ws_measurement_t;
 
+typedef struct {
+  uint32_t sync_time;
+} ws_server_response_t;
+
 void ws_wifi_init();
 esp_err_t ws_bme280_init();
 int32_t ws_bme280_measure(ws_bme280_measurement_t *measurement);
 
-esp_err_t ws_http_send(const ws_measurement_t *measurement);
+esp_err_t ws_http_send(const ws_measurement_t *measurement, ws_server_response_t *res);
 
 esp_err_t ws_led_init();
 void ws_led_set(int status);

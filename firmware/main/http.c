@@ -62,6 +62,28 @@ static int ws_http_create_socket(const char *hostname)  {
   return sfd;
 }
 
+int ws_http_read_headers(int sfd) {
+  // HTTP/1.1 200 OK\r\n
+  const size_t buffer_size = 16;
+  char buffer[buffer_size];
+  int received = recv(sfd, buffer, buffer_size, 0);
+  if (received < 12) return 0;
+  
+  char *bufptr = buffer;
+  
+  // HTTP/1
+  bufptr += 6;
+  // .1
+  if (*bufptr == '.') bufptr += 2;
+  // mezera
+  bufptr += 1;
+  int status = strtol(bufptr, &bufptr, 10);
+
+  for (;;) {
+    void *ff = memmem(buffer, received, );
+  }  
+}
+
 // Pomocná makra pro zápis do socketu.
 //
 #define send_helper_check_errror(expr) { err = expr; if (err < 0) goto on_tx_errror; }
@@ -101,7 +123,7 @@ static esp_err_t sendchunkf_impl(int sfd, int chars_printed, void* buffer, size_
 #define sendchunk(sfd, str, len) send_helper_check_errror(sendchunkf_impl(sfd, len, str, len + 1))
 #define sendchunkf(sfd, ...) send_helper_check_errror(sendchunkf_impl(sfd, snprintf(tx_buffer, sizeof(tx_buffer), __VA_ARGS__), tx_buffer, sizeof(tx_buffer)))
 
-esp_err_t ws_http_send(const ws_measurement_t *measurement) {
+esp_err_t ws_http_send(const ws_measurement_t *measurement, ws_server_response_t *res) {
   esp_err_t err = ESP_OK;
   int sfd = ws_http_create_socket(WS_HTTP_SERVER_NAME);
   if (sfd < 0) {
@@ -136,8 +158,7 @@ esp_err_t ws_http_send(const ws_measurement_t *measurement) {
   sendchunkf(sfd, "]}");
   sendchunk(sfd, "", 0);
 
-  char c;
-  recv(sfd, &c, 1, 0);
+  int status = ws_http_read_headers(sfd);
 
 on_tx_errror:
   close(sfd);
