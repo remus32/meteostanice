@@ -1,0 +1,13 @@
+{
+    "name": "remus32/meteostanice",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Matyáš Bobek",
+            "email": "matyas.bobek@gmail.com"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.2"
+    }
+}
