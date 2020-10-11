@@ -14,7 +14,7 @@
 
 #define WS_DNS_WAIT_TICKS 10000 / portTICK_RATE_MS
 
-#define WS_HTTP_SERVER_NAME "ws.remus32.cz"
+#define WS_HTTP_HOST "ws.remus32.cz"
 #define WS_HTTP_PATH "/publish.php"
 #define WS_HTTP_KEY "supertajneheslo"
 
@@ -22,7 +22,7 @@
 #define WS_LED_GPIO 2
 
 #define WS_MEASUREMENT_STORE_SIZE 16
-#define WS_MEASUREMENT_WAKEUP_INTERVAL 2
+#define WS_MEASUREMENT_WAKEUP_INTERVAL 60
 #define WS_MEASUREMENT_SEND_CYCLES 5
 
 // #define WS_MEASUREMENT_BME_CYCLES 5
@@ -34,10 +34,10 @@ typedef struct {
 } ws_bme280_measurement_t;
 
 typedef struct {
-  // Pole s bme merenimi
-  ws_bme280_measurement_t *bme;
-  // Maska - ktere body z *bme mame poslat
-  uint32_t bme_mask;
+  int32_t temp_sum;
+  uint32_t hum_sum;
+  uint32_t pres_sum;
+  uint8_t n_bme;
 } ws_measurement_t;
 
 typedef struct {

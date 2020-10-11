@@ -1,5 +1,7 @@
 #include "main.h"
 
+#include <string.h>
+
 #include "sdkconfig.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
@@ -15,36 +17,45 @@
 static const char *LTAG = "meteostanice main";
 
 // Paměť s měřeními
-RTC_SLOW_ATTR ws_bme280_measurement_t ws_bme280_measurements[WS_MEASUREMENT_STORE_SIZE];
-RTC_SLOW_ATTR uint8_t ws_bme280_measurement_idx = 0;
+RTC_SLOW_ATTR ws_measurement_t ws_measurements[1];
+RTC_SLOW_ATTR uint8_t ws_cycle_counter = 0;
 
 void app_main(void) {
-  ws_bme280_measurement_idx++;
+  esp_err_t err;
+  ws_cycle_counter++;
   
-  ESP_ERROR_CHECK(ws_led_init());
+  if ((err = ws_led_init()) != ESP_OK) {
+    ESP_LOGW(LTAG, "led_init failed: %s", esp_err_to_name(err));
+  }
   ws_led_set(0);
-
-  ESP_ERROR_CHECK(ws_bme280_init());
 
   // ws_ulp_start();
 
-  ws_measurement_t measurement;
+  if (ws_cycle_counter == 1) {
+    memset(&ws_measurements[0], 0, sizeof(ws_measurement_t));
+  }
 
-  ESP_ERROR_CHECK(ws_bme280_measure(&ws_bme280_measurements[ws_bme280_measurement_idx - 1]));
-  // ESP_LOGI(LTAG, "temp = %i.%i°C, pres=%uPa, hum = %u%%rH", bme280_measurement.temp / 100, bme280_measurement.temp % 100, bme280_measurement.pres / 256, bme280_measurement.hum / 1024);
+  if ((err = ws_bme280_init()) == ESP_OK) {
+    ws_bme280_measurement_t bme_m;
+    if ((err = ws_bme280_measure(&bme_m)) == ESP_OK) {
+      ws_measurements[0].temp_sum += bme_m.temp;
+      ws_measurements[0].hum_sum += bme_m.hum;
+      ws_measurements[0].pres_sum += bme_m.pres;
+      ws_measurements[0].n_bme += 1;
+    } else {
+      ESP_LOGW(LTAG, "bme280_measure failed: %s", esp_err_to_name(err));
+    }
+  } else {
+    ESP_LOGW(LTAG, "bme280_init failed: %s", esp_err_to_name(err));
+  }
 
-  if (ws_bme280_measurement_idx >= WS_MEASUREMENT_SEND_CYCLES) {
-    ws_bme280_measurement_idx = 0;
-
-    measurement = (ws_measurement_t){
-      .bme = ws_bme280_measurements,
-      .bme_mask = 0b11111
-    };
+  if (ws_cycle_counter >= WS_MEASUREMENT_SEND_CYCLES) {
+    ws_cycle_counter = 0;
 
     ws_led_set(50);
     ws_wifi_init();
-    ESP_ERROR_CHECK(ws_http_send(&measurement));
-
+    ws_server_response_t res;
+    ESP_ERROR_CHECK(ws_http_send(&ws_measurements[0], &res));
   }
 
 
