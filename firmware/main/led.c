@@ -1,16 +1,20 @@
 #include "main.h"
 
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
 
 #include "driver/gpio.h"
 
+/**
+ * Super-uzasne, epilepsii zpusobujici ledkove blikako
+ */
+
 // je zapnuto 1 nebo 0?
 #define LED_INVERT -1
 
 static TimerHandle_t blink_timer;
+// aktualni stav ledky
 static bool current_state = false;
 
 static void blink_timer_cb(TimerHandle_t _timer) {

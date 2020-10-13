@@ -16,9 +16,13 @@
 #include "lwip/sys.h"
 
 static const char *LTAG = "meteostanice wifi";
+
+// *** tohle je legalne zkopirovane od vyrobce ***
+
 static int s_retry_num = 0;
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
+
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
@@ -127,8 +131,6 @@ void ws_wifi_init(void) {
     ESP_ERROR_CHECK(ret);
 
     ESP_ERROR_CHECK(esp_netif_init());
-    // ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    ESP_LOGI(LTAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
 }

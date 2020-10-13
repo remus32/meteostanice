@@ -12,8 +12,6 @@
 // #define WS_WIFI_PASS "prasatko"
 #define WS_WIFI_MAX_RETRIES 10
 
-#define WS_DNS_WAIT_TICKS 10000 / portTICK_RATE_MS
-
 #define WS_HTTP_HOST "ws.remus32.cz"
 #define WS_HTTP_PATH "/publish.php"
 #define WS_HTTP_KEY "supertajneheslo"
@@ -22,10 +20,8 @@
 #define WS_LED_GPIO 2
 
 #define WS_MEASUREMENT_STORE_SIZE 16
-#define WS_MEASUREMENT_WAKEUP_INTERVAL 60
+#define WS_MEASUREMENT_WAKEUP_INTERVAL 58
 #define WS_MEASUREMENT_SEND_CYCLES 5
-
-// #define WS_MEASUREMENT_BME_CYCLES 5
 
 typedef struct {
   int32_t temp;

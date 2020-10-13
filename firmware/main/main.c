@@ -17,14 +17,16 @@
 static const char *LTAG = "meteostanice main";
 
 // Paměť s měřeními
+// zatim to je pole o velikosti jedna, ale kdyby jsme chteli ukladat mereni, bude vetsi
 RTC_SLOW_ATTR ws_measurement_t ws_measurements[1];
 RTC_SLOW_ATTR uint8_t ws_cycle_counter = 0;
 
 void app_main(void) {
   esp_err_t err;
   ws_cycle_counter++;
-  
+
   if ((err = ws_led_init()) != ESP_OK) {
+    // tohle neni fatalni chyba
     ESP_LOGW(LTAG, "led_init failed: %s", esp_err_to_name(err));
   }
   ws_led_set(0);
@@ -32,6 +34,7 @@ void app_main(void) {
   // ws_ulp_start();
 
   if (ws_cycle_counter == 1) {
+    // prvni cyklus
     memset(&ws_measurements[0], 0, sizeof(ws_measurement_t));
   }
 

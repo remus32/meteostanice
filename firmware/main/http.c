@@ -8,7 +8,7 @@ static char post_data_buffer[1024];
 
 static esp_err_t ws_http_event_handler(esp_http_client_event_t *ev) {
   ws_server_response_t *res = ev->user_data;
-  ESP_LOGI(LTAG, "event!");
+  // ty eventy nas zatim nezajimaj
   return ESP_OK;
 }
 
@@ -31,7 +31,7 @@ esp_err_t ws_http_send(const ws_measurement_t *measurement, ws_server_response_t
     .event_handler = ws_http_event_handler,
     .user_data = (void*)res
   };
-  
+
   esp_http_client_handle_t client = esp_http_client_init(&config);
   esp_http_client_set_header(client, "Content-Type", "application/json");
 
