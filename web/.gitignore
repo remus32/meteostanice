@@ -1,3 +1,5 @@
-.env
+/.env
 /vendor
-
+/.parcel-cache
+/node_modules
+/dist

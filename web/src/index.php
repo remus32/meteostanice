@@ -2,10 +2,11 @@
 require_once "common.inc";
 
 $dbh->beginTransaction();
-$dbh->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
+$dbh->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'); // ať to máme konzistentní
 list('period' => $last_period, 'time' => $last_updated, 'update' => $time_to_update) =
-  $dbh->query('SELECT MAX(period) AS period, NOW() - MAX(time) AS time, EXTRACT(epoch FROM \'5 minutes 10 seconds\'::interval - (NOW() - MAX(time))) AS update FROM measurements')->fetchAll()[0];
+  $dbh->query('SELECT MAX(period) AS period, EXTRACT(epoch FROM MAX(time)) AS time, EXTRACT(epoch FROM \'5 minutes 10 seconds\'::interval - (NOW() - MAX(time))) AS update FROM measurements')->fetchAll()[0];
 
+// čas do automatické aktualiace
 $time_to_update = $time_to_update < 10 ? 5.1 * 60 : $time_to_update;
 
 $current_data_stmt = $dbh->prepare('SELECT * FROM measurements WHERE period > ? ORDER BY period');
@@ -33,23 +34,22 @@ $current_data = $current_data_stmt->fetchAll();
   <main>
     <div class="width-wrapper">
       <span class="last-update">
-        Poslední aktualizace před <?= pgduration2czech($last_updated) ?>
+        Poslední aktualizace: <?= date('j. n.', $last_updated) ?> v <?= date('G:i', $last_updated) ?>
       </span>
 
       <svg viewBox="0 0 900 600">
         <g transform="translate(120 30)">
           <g transform="translate(0 500)">
-            <?= chart_period_axis(array_map(function ($el) { return $el['period']; }, $current_data), 700) ?>
+            <?= chart_period_axis(array_map(function($el) { return $el['period']; }, $current_data), 700) ?>
           </g>
           <?= chart_double_y_axis(
             $current_data,
             'temp', 'hum',
             5, 10,
             'red', 'green',
-            function ($va) { $va = round($va); return "$va °C"; },
-            function ($vb) { $vb = round($vb); return "$vb %rH"; },
-            500,
-            45, 700
+            function($va) { $va = round($va); return "$va °C"; },
+            function($vb) { $vb = round($vb); return "$vb %rH"; },
+            500, 700
           ) ?>
           <g transform="translate(700 0)">
             <?= chart_right_y_axis(

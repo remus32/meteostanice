@@ -1,2 +1,2 @@
-#!/bin/sh
-rsync -rvh vendor *.inc *.php steve.remus32.cz:/var/www/ws
+#!/bin/bash
+rsync -rvh dist/* vendor src/*.{inc,php,svg} steve.remus32.cz:/var/www/ws

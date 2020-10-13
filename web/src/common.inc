@@ -31,37 +31,14 @@ function unix2wstime($unix_time) {
 }
 
 /**
- * Převede časový interval ve formátu hh:mm:ss.ss do češtiny
+ * Pomocná fce pro výpočet vlastností datové řady.
+ *
+ * $arr ... pole objektů
+ * $field .. jak se jmenuje field v objektu s naší hodnotou?
+ * $round ... zaokrouhlení hranic
+ * $chart_length ... šířka nebo výška grafu
+ * $invert_map ... inverze osy, vhodné pro osu y
  */
-function pgduration2czech($str) {
-  list($hours, $mins, $secs) = explode(':', $str);
-  $hours = intval($hours);
-  $mins = intval($mins);
-  $secs = round(floatval($secs));
-
-  $rv = '';
-  if ($hours > 1) {
-    $rv .= "$hours hodinami";
-  } else if ($hours > 0) {
-    $rv .= "hodinou";
-  }
-
-  // v tomhle řádu už stejně vteřiny nikoho nezajímaj
-  if ($hours > 5) return $rv;
-
-  if ($mins > 0) {
-    if (strlen($rv)) $rv .= ' a ';
-    $rv .= $mins > 1 ? "$mins minutami" : 'minutou';
-  }
-
-  if (strlen($rv) && $secs <= 10) return $rv;
-
-  if (strlen($rv)) $rv .= ' a ';
-  $rv .= $secs > 10 ? "$secs sekundami" : 'pár sekundami';
-
-  return $rv;
-}
-
 function _series_min_max($arr, $field, $round, $chart_length, $invert_map = false) {
   $values = array_map(function($el) use($field) { return $el[$field]; }, $arr);
 
@@ -77,11 +54,15 @@ function _series_min_max($arr, $field, $round, $chart_length, $invert_map = fals
     'values' => $values,
     'min' => $min,
     'max' => $max,
+
+    // funkce na převod hodnoty z řady na pozici na grafu
     'map' => function($v) use($chart_length, $invert_map, $min, $max) {
       // pomocná promměnná
       $x = $chart_length * ($v - $min) / ($max - $min);
       return $invert_map ? $chart_length - $x : $x;
     },
+
+    // funkce na převod pozice na grafu na hodnotu z řady
     'imap' => function($v) use($chart_length, $invert_map, $min, $max) {
       // pomocná promměnná
       $x = $invert_map ? 1 - ($v / $chart_length) : $v / $chart_length;
@@ -90,6 +71,15 @@ function _series_min_max($arr, $field, $round, $chart_length, $invert_map = fals
   ];
 }
 
+/**
+ * Vyrobí z datové řady SVG path a bodíky
+ *
+ * $arr ... pole objektů
+ * $xfield ... jak se jmenuje field s hodnotou pro osu x?
+ * $yfield ... jak se jmenuje field s hodnotou pro osu y?
+ * $width, $height ... rozměry grafu
+ *
+ */
 function chart_line($arr, $xfield, $yfield, $width, $height, $round, $color) {
   if (count($arr) < 3) return false;
 
@@ -115,6 +105,11 @@ function chart_line($arr, $xfield, $yfield, $width, $height, $round, $color) {
   return $rv;
 }
 
+/**
+ * Vyrobí osu x s časem
+ *
+ * $pts ... x hodnoty bodů v grafu pro určení rozsahu
+ */
 function chart_period_axis($pts, $width) {
   $tick_len = 20;
   $attrs = "stroke=\"black\" stroke-width=\"3px\"";
@@ -141,6 +136,13 @@ function chart_period_axis($pts, $width) {
   return $rv;
 }
 
+/**
+ * Vyrobí osu y s dvěma veličinami
+ *
+ * $arr ... pole objektů
+ * $afield, bfield ... jak se jmenují fieldy v objektech?
+ * $a_str_fn, $b_str_fn ... funkce na převod z čísla do uživatelsky přívětivého stringu
+ */
 function chart_double_y_axis($arr, $afield, $bfield, $around, $bround, $acolor, $bcolor, $a_str_fn, $b_str_fn, $height, $chart_width) {
   $tick_len = 8;
   $attrs = "stroke=\"black\" stroke-width=\"3px\"";
@@ -153,7 +155,7 @@ function chart_double_y_axis($arr, $afield, $bfield, $around, $bround, $acolor, 
     return "<line x1=\"0\" x2=\"$chart_width\" y1=\"$ypos\" y2=\"$ypos\" $grid_attrs />";
   };
 
-  $tick_str = function($y, $disable_line = false) use ($attrs, $grid_str, $tick_len, $a_str_fn, $b_str_fn, $imapa, $imapb, $acolor, $bcolor) {
+  $tick_str = function($y, $disable_line = false) use ($attrs, $grid_str, $tick_len, $a_str_fn, $b_str_fn, $imapa, $imapb, $acolor, $bcolor) { // fkin php
     $va = $imapa($y);
     $vb = $imapb($y);
 
@@ -180,6 +182,13 @@ function chart_double_y_axis($arr, $afield, $bfield, $around, $bround, $acolor, 
   return $rv;
 }
 
+/**
+ * Vyrobí osu y na pravou stranu
+ *
+ * $arr ... pole objektů
+ * $field ... jak se jmenují fieldy v objektech?
+ * $str_fn ... funkce na převod z čísla do uživatelsky přívětivého stringu
+ */
 function chart_right_y_axis($arr, $field, $round, $color, $str_fn, $height) {
   $tick_len = 8;
   $attrs = "stroke=\"black\" stroke-width=\"3px\"";

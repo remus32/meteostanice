@@ -1,12 +1,25 @@
 <?php
 require_once "common.inc";
 
+// bezpečnost především
 if ($_GET['key'] !== $_ENV['API_KEY']) die();
 
 // https://stackoverflow.com/questions/7047870/issue-reading-http-request-body-from-a-json-post-in-php
 $input_json = file_get_contents('php://input');
 $input = json_decode($input_json, true);
 
+/* Struktura tabulky:
+                      Table "public.measurements"
+ Column |            Type             | Collation | Nullable | Default
+--------+-----------------------------+-----------+----------+---------
+ period | bigint                      |           | not null |
+ temp   | double precision            |           |          |
+ hum    | double precision            |           |          |
+ pres   | double precision            |           |          |
+ time   | timestamp without time zone |           | not null | now()
+Indexes:
+    "measurements_pkey" PRIMARY KEY, btree (period)
+*/
 $stmt = $dbh->prepare('INSERT INTO measurements("period", "temp", "hum", "pres") VALUES(?, ?, ?, ?)');
 
 foreach ($input as $id => $measurement) {
