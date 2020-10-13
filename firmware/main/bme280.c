@@ -262,6 +262,8 @@ static esp_err_t ws_bme280_read_measurement(ws_bme280_measurement_raw_t *out) {
   return ESP_OK;
 }
 
+// *** vzorce jsou zkopirovany z progamu od vyrobce ***
+
 static int32_t ws_bme280_compensate_temp(int32_t input, int32_t *t_fine, ws_bme280_compensation_t *c) {
   const int32_t x1 = (
     (((input >> 3) - ((int32_t)(c->dig_T1) << 1)))
@@ -279,7 +281,7 @@ static int32_t ws_bme280_compensate_temp(int32_t input, int32_t *t_fine, ws_bme2
   *t_fine = x1 + x2;
   const int32_t res = (*t_fine * 5 + 128) >> 8;
 
-  ESP_LOGD(LTAG, "compensate_temp input=%i,x1=%i,x2=%i,res=%i,t1=%u,t2=%i,t3=%i", input,x1,x2,res,c->dig_T1,c->dig_T2,c->dig_T3);
+  // ESP_LOGD(LTAG, "compensate_temp input=%i,x1=%i,x2=%i,res=%i,t1=%u,t2=%i,t3=%i", input,x1,x2,res,c->dig_T1,c->dig_T2,c->dig_T3);
 
   return res;
 }
@@ -354,7 +356,10 @@ static uint32_t ws_bme280_compensate_pres(int32_t input, int32_t t_fine, ws_bme2
 	return (uint32_t)pressure;
 }
 
-
+/**
+ * Část chyb je přes makro ESP_ERROR_CHECK fatální, to ale nevadí, stejně nemá smysl cokoliv dělat,
+ * pokud se tohle nepodaří.
+ */
 esp_err_t ws_bme280_init() {
   esp_err_t err;
 
@@ -407,15 +412,16 @@ int32_t ws_bme280_measure(ws_bme280_measurement_t *measurement) {
   esp_err_t err;
 
   uint8_t conf_buf[] = {
-    // Vypnout oversampling teploty a tlaku; zapnout forced mode
     WS_BME280_REG_CTRL_MEAS, 1 | WS_BME280_MEAS_VALUE
   };
+  // tohle spustí měření (tzv. forced mode)
   err = ws_bme280_write(conf_buf, sizeof(conf_buf));
   if (err != ESP_OK) {
     ESP_LOGW(LTAG, "Failed to enter forced mode");
     return err;
   }
 
+  // čekáme, než se dokončí měření
   for(uint32_t i = 1;;i++) {
     err = ws_bme280_read_status(&status);
     if (err != ESP_OK) {
@@ -435,6 +441,7 @@ int32_t ws_bme280_measure(ws_bme280_measurement_t *measurement) {
     vTaskDelay(WS_MEASURE_WAITLOOP_DELAY);
   }
 
+  // přečtení měření a kompenzace
   ws_bme280_measurement_raw_t raw;
   err = ws_bme280_read_measurement(&raw);
   if (err != ESP_OK) {
